@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"github.com/proctorexam/go/procwise/env"
 )
 
 type Data map[string]any
@@ -35,6 +34,8 @@ type Client struct {
 	Client HttpClient
 	token  string
 	secret string
+	user string
+	password string
 }
 
 func NewClient(opts ClientOptions) *Client {
@@ -64,12 +65,14 @@ func (c *Client) SignIn(domain, email, password string) (*Response, error) {
 	if !ok {
 		return res, fmt.Errorf("missing secret_key")
 	}
+	c.user = email
+	c.password = password
 	return res, nil
 }
 
 func (c *Client) FindForReview(domain, id string) (*Response, error) {
 	if c.token == "" {
-		res, err := c.SignIn(domain, env.PE_USER, env.PE_PASSWORD)
+		res, err := c.SignIn(domain, c.user, c.password)
 		if err != nil {
 			return res, err
 		}
