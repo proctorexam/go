@@ -32,7 +32,7 @@ type ClientOptions struct {
 
 type Client struct {
 	Client HttpClient
-	token  string
+	Token  string
 	secret string
 	user string
 	password string
@@ -42,7 +42,7 @@ func NewClient(opts ClientOptions) *Client {
 	if opts.Client == nil {
 		opts.Client = &http.Client{}
 	}
-	return &Client{Client: opts.Client, token: opts.Token, secret: opts.Secret}
+	return &Client{Client: opts.Client, Token: opts.Token, secret: opts.Secret}
 }
 
 func (c *Client) SignIn(domain, email, password string) (*Response, error) {
@@ -57,7 +57,7 @@ func (c *Client) SignIn(domain, email, password string) (*Response, error) {
 	}
 	var ok bool
 	fmt.Println(res.Data)
-	c.token, ok = res.Data["api_token"].(string)
+	c.Token, ok = res.Data["api_token"].(string)
 	if !ok {
 		return res, fmt.Errorf("missing api_token")
 	}
@@ -71,7 +71,7 @@ func (c *Client) SignIn(domain, email, password string) (*Response, error) {
 }
 
 func (c *Client) FindForReview(domain, id string) (*Response, error) {
-	if c.token == "" {
+	if c.Token == "" {
 		res, err := c.SignIn(domain, c.user, c.password)
 		if err != nil {
 			return res, err
@@ -143,7 +143,7 @@ func (c *Client) newApiRequest(method string, url string, params Data) (*http.Re
 		return nil, err
 	}
 	r.Header.Add("Content-Type", "application/json")
-	r.Header.Add("Authorization", "Token token="+c.token)
+	r.Header.Add("Authorization", "Token token="+c.Token)
 	r.Header.Add("Accept", "application/vnd.procwise.v3")
 	return r, nil
 }
