@@ -3,10 +3,10 @@ package procwise_test
 import (
 	"encoding/json"
 	"io"
-	"review_backend/procwise"
 	"sort"
 	"strings"
 	"testing"
+	"github.com/proctorexam/go/procwise"
 )
 
 func TestSignIn(t *testing.T) {
