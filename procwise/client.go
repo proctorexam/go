@@ -9,11 +9,20 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
 
 type Data map[string]any
+
+func (d Data) Query() url.Values {
+	q := make(url.Values)
+	for k, v := range d {
+		q.Add(k, fmt.Sprintf("%v", v))
+	}
+	return q
+}
 
 type Response struct {
 	*http.Response
@@ -31,10 +40,10 @@ type ClientOptions struct {
 }
 
 type Client struct {
-	Client HttpClient
-	Token  string
-	secret string
-	user string
+	Client   HttpClient
+	Token    string
+	secret   string
+	user     string
 	password string
 }
 
@@ -99,6 +108,9 @@ func (c *Client) doRequest(reqFunc func() (*http.Request, error)) (*Response, er
 		return nil, err
 	}
 	res, err := c.Client.Do(req)
+	fmt.Printf("\n====\ncurl -H 'Authorization: Token= %s' -H 'Content-Type: application/json' -H 'Accept: application/vnd.procwise.v3' %s?%s\n====", c.Token, req.URL.String(), req.URL.RawQuery)
+	fmt.Printf("req: %+v\n", req.Header)
+	fmt.Printf("res: %+v\n", res.Header)
 	if err != nil {
 		return nil, err
 	}
@@ -129,16 +141,24 @@ func (c *Client) newRequest(method string, url string, params Data) (*http.Reque
 	return r, nil
 }
 
-func (c *Client) newApiRequest(method string, url string, params Data) (*http.Request, error) {
+func (c *Client) newApiRequest(method string, uri string, params Data) (r *http.Request, err error) {
 	params["nonce"] = time.Now().UnixMilli()
 	params["timestamp"] = params["nonce"]
 	sig := c.signature(params)
 	params["signature"] = sig
-	b, err := json.Marshal(params)
-	if err != nil {
-		return nil, err
+
+	switch method {
+	case http.MethodPatch, http.MethodPost, http.MethodPut:
+		var b []byte
+		b, err = json.Marshal(params)
+		if err != nil {
+			return
+		}
+		r, err = http.NewRequest(method, uri, bytes.NewReader(b))
+	default:
+		r, err = http.NewRequest(method, fmt.Sprintf("%s?%s", uri, params.Query().Encode()), nil)
 	}
-	r, err := http.NewRequest(method, url, bytes.NewReader(b))
+
 	if err != nil {
 		return nil, err
 	}
