@@ -65,7 +65,7 @@ func (c *Client) SignIn(domain, email, password string) (*Response, error) {
 		return res, fmt.Errorf(res.Status)
 	}
 	var ok bool
-	fmt.Println(res.Data)
+
 	c.Token, ok = res.Data["api_token"].(string)
 	if !ok {
 		return res, fmt.Errorf("missing api_token")
@@ -108,9 +108,6 @@ func (c *Client) doRequest(reqFunc func() (*http.Request, error)) (*Response, er
 		return nil, err
 	}
 	res, err := c.Client.Do(req)
-	fmt.Printf("\n====\ncurl -H 'Authorization: Token= %s' -H 'Content-Type: application/json' -H 'Accept: application/vnd.procwise.v3' %s?%s\n====", c.Token, req.URL.String(), req.URL.RawQuery)
-	fmt.Printf("req: %+v\n", req.Header)
-	fmt.Printf("res: %+v\n", res.Header)
 	if err != nil {
 		return nil, err
 	}
